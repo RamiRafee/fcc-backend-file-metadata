@@ -82,17 +82,23 @@ app.post('/api/fileanalyse', upload.single('upfile'), async (req, res) => {
 app.get('/api/file/:id', async (req, res) => {
   try {
     const fileId = req.params.id;
-    const file = await File.findById(fileId);
+    const file = await File.findOne({ fileId: fileId });
 
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Serve the file content
-    res.setHeader('Content-Type', file.type);
+    // Set the appropriate content type based on fileType
+    const contentType = file.fileType === 'image' ? 'image/*' : file.fileType === 'video' ? 'video/*' : 'application/octet-stream';
+
+    // Set Content-Disposition header to trigger download
+    
+    res.setHeader('Content-Disposition', `attachment; filename=${file.filename}`);
+    res.setHeader('Content-Type', contentType);
+    
     res.send(file.content);
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to retrieve file content' });
+    return res.status(500).json({ error: 'Failed to retrieve file content' + error });
   }
 });
 
